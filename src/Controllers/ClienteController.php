@@ -2,26 +2,22 @@
 
 namespace App\Controllers;
 
+use App\helpers\Response;
 use App\Models\ClienteModel;
 
 class ClienteController
 {
     public function getAll(): void
     {
-        $clientes = ClienteModel::getAll();
 
-        // Header
-        header("Content-Type: application/json");
-        // Content-Type: text/plain
-        // Content-Type: application/xml
-        // ....
+        try {
+            $clientes = ClienteModel::getAll();
 
-        // Status code
-        http_response_code(200);
-
-        // converter para JSON
-        $json = json_encode($clientes);
-        echo $json;
+            Response::ok(["status" => "success", "data" => $clientes]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            Response::internalServerError(["status" => "error", "data" => "Ocorreu um erro no servidor. Tenta novamente"]);
+        }
     }
 
     public function getById(int $id): void
@@ -30,25 +26,14 @@ class ClienteController
             $cliente = ClienteModel::getById($id);
 
             if ($cliente === false) {
-                http_response_code(404);
-                header("Content-Type: application/json");
-                $response = json_encode(["messagem" => "erro", "descricao" => "Registo nao encontrado"]);
-
-                echo $response;
+                Response::notFound(["status" => "error", "data" => "Registo não encontrado"]);
                 exit;
             }
 
-            http_response_code(200);
-            header("Content-Type: application/json");
-            $response = json_encode($cliente);
-
-            echo $response;
+            Response::ok(["status" => "success", "data" => $cliente]);
         } catch (\Exception $e) {
-            http_response_code(500);
-            header("Content-Type: application/json");
-            $response = json_encode(["messagem" => "erro", "descricao" => $e->getMessage()]);
-
-            echo $response;
+            error_log($e->getMessage());
+            Response::internalServerError(["status" => "error", "data" => "Ocorreu um erro no servidor. Tenta novamente"]);
         }
     }
 
@@ -61,17 +46,10 @@ class ClienteController
 
             $idCliente = ClienteModel::create($data["nome"], $data["email"]);
 
-            http_response_code(201);
-            header("Content-Type: application/json");
-            $response = json_encode(["messagem" => "sucesso", "id_cliente" => $idCliente]);
-
-            echo $response;
+            Response::created(["status" => "success", "data" => ["id_cliente" => $idCliente]]);
         } catch (\Exception $e) {
-            http_response_code(500);
-            header("Content-Type: application/json");
-            $response = json_encode(["messagem" => "erro", "descricao" => $e->getMessage()]);
-
-            echo $response;
+            error_log($e->getMessage());
+            Response::internalServerError(["status" => "error", "data" => "Ocorreu um erro no servidor. Tenta novamente"]);
         }
     }
 
@@ -81,28 +59,20 @@ class ClienteController
             $cliente = ClienteModel::getById($id);
 
             if ($cliente === false) {
-                http_response_code(404);
-                header("Content-Type: application/json");
-                $response = json_encode(["messagem" => "erro", "descricao" => "Registo nao encontrado"]);
-
-                echo $response;
+                Response::notFound(["status" => "error", "data" => "Registo não encontrado"]);
                 exit;
             }
 
             $content = file_get_contents("php://input");
 
-            // converter para array
             $data = json_decode($content, true);
 
             ClienteModel::update($data["nome"], $data["email"], $id);
 
-            http_response_code(204);
+            Response::noContent();
         } catch (\Exception $e) {
-            http_response_code(500);
-            header("Content-Type: application/json");
-            $response = json_encode(["messagem" => "erro", "descricao" => $e->getMessage()]);
-
-            echo $response;
+            error_log($e->getMessage());
+            Response::internalServerError(["status" => "error", "data" => "Ocorreu um erro no servidor. Tenta novamente"]);
         }
     }
 
@@ -112,23 +82,16 @@ class ClienteController
             $cliente = ClienteModel::getById($id);
 
             if ($cliente === false) {
-                http_response_code(404);
-                header("Content-Type: application/json");
-                $response = json_encode(["messagem" => "erro", "descricao" => "Registo nao encontrado"]);
-
-                echo $response;
+                Response::notFound(["status" => "error", "data" => "Registo não encontrado"]);
                 exit;
             }
 
             ClienteModel::delete($id);
 
-            http_response_code(204);
+            Response::noContent();
         } catch (\Exception $e) {
-            http_response_code(500);
-            header("Content-Type: application/json");
-            $response = json_encode(["messagem" => "erro", "descricao" => $e->getMessage()]);
-
-            echo $response;
+            error_log($e->getMessage());
+            Response::internalServerError(["status" => "error", "data" => "Ocorreu um erro no servidor. Tenta novamente"]);
         }
     }
 }
